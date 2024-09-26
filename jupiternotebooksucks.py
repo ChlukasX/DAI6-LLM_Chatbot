@@ -1,3 +1,4 @@
+from flask import Flask, render_template, request
 from dotenv import load_dotenv
 import os
 from groq import Groq
@@ -7,6 +8,9 @@ import json
 # Load environment variables
 load_dotenv()
 huggingface_token = os.getenv("HUGGINGFACE_API_KEY")
+client = Groq(api_key=os.environ.get("API_KEY"))
+
+app = Flask(__name__)
 
 # List of models
 models = [
@@ -18,8 +22,7 @@ models = [
     ["DialoGPT", "microsoft/DialoGPT-medium"],
 ]
 
-# Initialize Groq client
-client = Groq(api_key=os.environ.get("API_KEY"))
+
 
 def query(payload, api_url, headers):
     """Send query to the API."""
@@ -62,45 +65,25 @@ def ask_question_groq(question, model):
     except Exception as e:
         print(f"Error communicating with Groq API: {e}")
 
-def main():
-    """Main loop for user interaction."""
-    while True:
-        # Display model list
-        print("\nAvailable models:")
-        print("0. Exit")
-        for idx, model in enumerate(models, 1):
-            print(f"{idx}. {model[0]}")
+@app.route("/", methods=["GET", "POST"])
+def index():
+    response = ""
+    selected_model = ""
+    if request.method == "POST":
+        selected_model = request.form["model"]
+        user_question = request.form["question"]
 
-        # Input validation for model choice
-        user_input = input("\nChoose a model (type the number or '0' to exit): ").strip()
-        if user_input == "0":
-            print("Goodbye!")
-            break
-
-        try:
-            selected_model = models[int(user_input) - 1]
-        except (IndexError, ValueError):
-            print("Invalid selection. Please choose a valid model number.")
-            continue
-
-        # Ask the question
-        user_question = input("You: ").strip()
-        if user_question.lower() == "quit":
-            print("Goodbye!")
-            break
-
-        # Display the user question as if in a chat format
-        print(f"\nUser:\n{user_question}\n")
-
-        # Determine the API to use based on the model URL format
-        model_name, model_url = selected_model
+        # Find the model URL
+        model_name, model_url = next((name, url) for name, url in models if name == selected_model)
 
         if "/" in model_url:
-            print("\nUsing Huggingface API")
-            ask_question_huggingface(model_url, user_question)
+            # Huggingface API
+            response = ask_question_huggingface(model_url, user_question)
         else:
-            print("\nUsing Groq API")
-            ask_question_groq(user_question, model_url)
+            # Groq API
+            response = ask_question_groq(user_question, model_url)
+
+    return render_template("screen/index.html", models=models, response=response, selected_model=selected_model)
 
 if __name__ == "__main__":
-    main()
+    app.run(debug=True)

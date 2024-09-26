@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Question App</title>
+</head>
+<body>
+    <h1>Ask a Question to an AI Model</h1>
+    
+    <form method="POST">
+        <label for="model">Choose a model:</label>
+        <select name="model" id="model" required>
+            {% for model in models %}
+                <option value="{{ model[0] }}" {% if selected_model == model[0] %} selected {% endif %}>{{ model[0] }}</option>
+            {% endfor %}
+        </select>
+        
+        <br><br>
+        
+        <label for="question">Your question:</label>
+        <input type="text" id="question" name="question" required>
+        
+        <br><br>
+        
+        <button type="submit">Ask</button>
+    </form>
+    
+    {% if response %}
+        <h2>Response:</h2>
+        <p>{{ response }}</p>
+    {% endif %}
+    
+</body>
+</html>
