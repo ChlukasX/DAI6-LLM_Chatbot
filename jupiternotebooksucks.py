@@ -3,17 +3,23 @@ from dotenv import load_dotenv
 import os
 from groq import Groq
 import requests
-import json
+import ollama
 
 # Load environment variables
 load_dotenv()
 huggingface_token = os.getenv("HUGGINGFACE_API_KEY")
 client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 
+if huggingface_token is None or os.environ.get("GROQ_API_KEY") is None:
+    # todo return it as an alert in the webpage using flask
+    print("Please fill the Api keys variables inside the .env")
+    exit(1)
+
 app = Flask(__name__)
 
 # List of models
 models = [
+    ["local-llama3.2", "llama3.2:3b"],
     ["Meta-llama3", "llama3-8b-8192"],
     ["Gemma 2 9B", "gemma2-9b-it"],
     ["GPT2", "openai-community/gpt2"],
@@ -70,6 +76,20 @@ def ask_question_groq(question, model):
     except Exception as e:
         print(f"Error communicating with Groq API: {e}")
 
+def ask_local_model(desiredModel, question):
+    response = ollama.chat(model=desiredModel, messages=[
+        {
+            'role': 'user',
+            'content': question,
+        },
+    ])
+
+    OllamaResponse = response['message']['content']
+
+    print(OllamaResponse)
+
+    return OllamaResponse
+
 @app.route("/", methods=["GET", "POST"])
 def index():
     response = ""
@@ -79,9 +99,11 @@ def index():
         user_question = request.form["question"]
 
         # Find the model URL
-        _, model_url = next((name, url) for name, url in models if name == selected_model)
+        model_name, model_url = next((name, url) for name, url in models if name == selected_model)
 
-        if "/" in model_url:
+        if "local" in model_name:
+            response = ask_local_model(model_url, user_question)
+        elif "/" in model_url:
             # Huggingface API
             response = ask_question_huggingface(model_url, user_question)
         else:
