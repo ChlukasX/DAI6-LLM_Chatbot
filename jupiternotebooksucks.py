@@ -8,7 +8,7 @@ import json
 # Load environment variables
 load_dotenv()
 huggingface_token = os.getenv("HUGGINGFACE_API_KEY")
-client = Groq(api_key=os.environ.get("API_KEY"))
+client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 
 app = Flask(__name__)
 
