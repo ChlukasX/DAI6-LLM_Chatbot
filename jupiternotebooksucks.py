@@ -74,7 +74,7 @@ def index():
         user_question = request.form["question"]
 
         # Find the model URL
-        model_name, model_url = next((name, url) for name, url in models if name == selected_model)
+        _, model_url = next((name, url) for name, url in models if name == selected_model)
 
         if "/" in model_url:
             # Huggingface API
