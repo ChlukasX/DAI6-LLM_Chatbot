@@ -49,9 +49,13 @@ def ask_question_huggingface(model_url, question):
     if 'error' in output:
         print(f"Error: {output['error']}")
     else:
+        result = ""
         for item in output:
             if 'generated_text' in item:
                 print(f"{item['generated_text']}\n")
+                result += f"{item['generated_text']}\n"
+        return result
+
 
 def ask_question_groq(question, model):
     """Send a question to Groq API."""
@@ -62,6 +66,7 @@ def ask_question_groq(question, model):
         )
         print(f"\nAI ({model}):\n")
         print(chat_completion.choices[0].message.content + "\n")
+        return chat_completion.choices[0].message.content
     except Exception as e:
         print(f"Error communicating with Groq API: {e}")
 
